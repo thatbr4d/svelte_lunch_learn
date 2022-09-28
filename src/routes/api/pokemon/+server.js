@@ -66,3 +66,9 @@ export function GET() {
 
 	return json(pokemon);
 }
+
+export async function POST({ request }) {
+	console.log(await request.json());
+
+	return json(true);
+}

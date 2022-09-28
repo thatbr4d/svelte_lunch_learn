@@ -1,24 +1,53 @@
+<script>
+	import Pokecard from '../../lib/components/pokecard.svelte';
+	import Pokemon from '$lib/models/pokemon.js';
+
+	export let data;
+
+	let pokemon = data.pokemon;
+	let currentPokemon = new Pokemon();
+	let isEdit = false;
+	let index = pokemon.length;
+
+	function deletePokemon(p) {
+		pokemon = pokemon.filter((x) => x.id !== p.id);
+	}
+
+	function addPokemonBtn() {
+		currentPokemon = new Pokemon();
+		isEdit = false;
+	}
+
+	function editPokemonBtn(p) {
+		currentPokemon = p;
+		isEdit = true;
+	}
+
+	function saveEdit() {
+		pokemon[pokemon.findIndex((x) => x.id === currentPokemon.id)] = currentPokemon;
+	}
+
+	function saveAdd() {
+		currentPokemon.id = ++index;
+		pokemon = [...pokemon, currentPokemon];
+	}
+
+	async function saveAll() {
+		const response = await fetch('/api/pokemon', {
+			method: 'POST',
+			body: JSON.stringify(pokemon),
+			headers: { 'content-type': 'application/json' }
+		});
+	}
+</script>
+
 <div class="container">
 	<h1>Lunch and Learn Demo</h1>
 
 	<div class="row">
-		<div class="card m-1" style="width: 18rem;">
-			<img
-				class="card-img-top"
-				src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png"
-				alt="Pokemon profile"
-			/>
-			<div class="card-body">
-				<h5 class="card-title">Title</h5>
-				<p class="card-text" />
-
-				<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#pokeModal"
-					>Edit
-				</button>
-
-				<button class="btn btn-danger">Delete</button>
-			</div>
-		</div>
+		{#each pokemon as p}
+			<Pokecard {p} deleteFunc={deletePokemon} editFunc={editPokemonBtn} />
+		{/each}
 	</div>
 
 	<div class="row">
@@ -27,9 +56,12 @@
 			class="btn btn-primary"
 			data-bs-toggle="modal"
 			data-bs-target="#pokeModal"
+			on:click={addPokemonBtn}
 		>
 			Add Another Pokemon
 		</button>
+
+		<button type="button" class="btn btn-primary mt-1" on:click={saveAll}> Save All </button>
 	</div>
 </div>
 
@@ -40,10 +72,35 @@
 				<h5 class="modal-title">Add/Edit Pokemon</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" />
 			</div>
-			<div class="modal-body" />
+			<div class="modal-body">
+				<input
+					class="form-control form-control-lg mb-3"
+					type="text"
+					placeholder="Name"
+					bind:value={currentPokemon.name}
+				/>
+
+				<input
+					class="form-control form-control-lg mb-3"
+					type="text"
+					placeholder="Height"
+					bind:value={currentPokemon.height}
+				/>
+				<input
+					class="form-control form-control-lg mb-3"
+					type="text"
+					placeholder="Hp"
+					bind:value={currentPokemon.hp}
+				/>
+			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-				<button type="button" class="btn btn-primary" data-bs-dismiss="modal">Save changes</button>
+				<button
+					type="button"
+					class="btn btn-primary"
+					data-bs-dismiss="modal"
+					on:click={isEdit ? saveEdit : saveAdd}>Save changes</button
+				>
 			</div>
 		</div>
 	</div>
